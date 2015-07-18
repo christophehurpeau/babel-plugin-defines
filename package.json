@@ -1,8 +1,10 @@
 {
   "name": "babel-plugin-defines",
   "description": "Replace defined variables by their values",
-  "version": "1.0.0",
-  "keywords": ["babel-plugin"],
+  "version": "1.0.1",
+  "keywords": [
+    "babel-plugin"
+  ],
   "repository": "christophehurpeau/babel-plugin-defines",
   "author": "Christophe Hurpeau <christophe@hurpeau.com> (http://christophe.hurpeau.com/)",
   "dependencies": {
