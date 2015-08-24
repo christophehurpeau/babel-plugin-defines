@@ -7,7 +7,7 @@ Like defines for UglifyJS, this plugin will replace defined variables by their v
 ### cli
 
 ```sh
-npm install babel babel-plugin-example
+npm install babel babel-plugin-defines
 babel --plugins babel-plugin-defines script.js
 ```
 
