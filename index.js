@@ -1,27 +1,33 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-exports["default"] = function (_ref) {
-  var Plugin = _ref.Plugin;
+exports.default = function (_ref) {
   var t = _ref.types;
 
-  return new Plugin("defines", {
+  return {
     visitor: {
-      MemberExpression: function MemberExpression(node, parent, scope, state) {
-        if (t.isIdentifier(node.object) && node.object.name === "global") {
+      MemberExpression: function MemberExpression(path, state) {
+        var node = path.node;
+        if (t.isIdentifier(node.object) && node.object.name === 'global') {
           var property = node.property;
-          var defines = state.opts.extra.defines;
+          var defines = state.opts;
           if (t.isIdentifier(property) && defines[property.name] !== undefined) {
-            return t.valueToNode(state.opts.extra.defines[property.name]);
+            path.addComment('trailing', 'defines: ' + property.name + ' = ' + JSON.stringify(defines[property.name]));
+            path.replaceWith(t.valueToNode(defines[property.name]));
+          }
+
+          if (path.parentPath.isBinaryExpression()) {
+            var evaluated = path.parentPath.evaluate();
+            if (evaluated.confident) {
+              path.parentPath.addComment('trailing', 'defines: ' + property.name + ' = ' + JSON.stringify(defines[property.name]));
+              path.parentPath.replaceWith(t.valueToNode(evaluated.value));
+            }
           }
         }
       }
     }
-  });
+  };
 };
-
-module.exports = exports["default"];
-

@@ -14,16 +14,18 @@ babel --plugins babel-plugin-defines script.js
 ### .babelrc / gulp options
 
 ```js
-plugins: ['defines'],
-extra: {
-    defines: {
-        SERVER: true,
-        BROWSER: false,
-    }
-}
+plugins: [
+	['defines', { "GLOBAL_TEST": 'test', "GLOBAL_1": 1, 'GLOBAL_FALSE': false }]
+]
 ```
 
-## Code example
+## Real life example
+
+```js
+plugins: [
+	['defines', { "BROWSER": true, "SERVER": false }]
+]
+```
 
 ```js
 if (global.BROWSER) {

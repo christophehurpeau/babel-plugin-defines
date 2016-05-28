@@ -1,15 +1,25 @@
-export default function ({ Plugin, types: t }) {
-  return new Plugin("defines", {
+export default function ({ types: t }) {
+  return {
     visitor: {
-      MemberExpression(node, parent, scope, state) {
+      MemberExpression(path, state) {
+        const node = path.node;
         if (t.isIdentifier(node.object) && node.object.name === 'global') {
-          var property = node.property;
-          var defines = state.opts.extra.defines;
+          const property = node.property;
+          const defines = state.opts;
           if (t.isIdentifier(property) && defines[property.name] !== undefined) {
-            return t.valueToNode(state.opts.extra.defines[property.name]);
+            path.addComment('trailing', `defines: ${property.name} = ${JSON.stringify(defines[property.name])}`);
+            path.replaceWith(t.valueToNode(defines[property.name]));
           }
+
+          if (path.parentPath.isBinaryExpression()) {
+            let evaluated = path.parentPath.evaluate();
+            if (evaluated.confident) {
+              path.parentPath.addComment('trailing', `defines: ${property.name} = ${JSON.stringify(defines[property.name])}`);
+              path.parentPath.replaceWith(t.valueToNode(evaluated.value));
+            }
+}
         }
       }
     }
-  });
+  };
 }
