@@ -1,25 +1,77 @@
 export default function ({ types: t }) {
-  return {
-    visitor: {
-      MemberExpression(path, state) {
-        const node = path.node;
-        if (t.isIdentifier(node.object) && node.object.name === 'global') {
-          const property = node.property;
-          const defines = state.opts;
-          if (t.isIdentifier(property) && defines[property.name] !== undefined) {
-            path.addComment('trailing', `defines: ${property.name} = ${JSON.stringify(defines[property.name])}`);
-            path.replaceWith(t.valueToNode(defines[property.name]));
-          }
+    function replacePathIfDefined(path, name, state) {
+        const defines = state.opts;
 
-          if (path.parentPath.isBinaryExpression()) {
+        if (defines[name] !== undefined) {
+            path.addComment(
+                'trailing',
+                `defines: ${name} = ${JSON.stringify(defines[name])}`
+            );
+            path.replaceWith(t.valueToNode(defines[name]));
+        }
+
+        if (path.parentPath.isBinaryExpression()) {
             let evaluated = path.parentPath.evaluate();
             if (evaluated.confident) {
-              path.parentPath.addComment('trailing', `defines: ${property.name} = ${JSON.stringify(defines[property.name])}`);
-              path.parentPath.replaceWith(t.valueToNode(evaluated.value));
+                path.parentPath.addComment(
+                    'trailing',
+                    `defines: ${name} = ${JSON.stringify(defines[name])}`
+                );
+                path.parentPath.replaceWith(t.valueToNode(evaluated.value));
             }
-}
         }
-      }
     }
-  };
+
+    return {
+        visitor: {
+            MemberExpression(path, state) {
+                const node = path.node;
+                // console.log(node);
+
+                // console.log('Identifier', node, path.scope.hasBinding(node.name));
+
+                if (t.isIdentifier(node.object) && node.object.name === 'global') {
+                    const property = node.property;
+                    replacePathIfDefined(path, property.name, state);
+                }
+            },
+
+            Expression(path, state) {
+                const node = path.node;
+
+                if (t.isIdentifier(node)) {
+                    if (path.scope.hasBinding(node.name)) return;
+
+                    const parentPath = path.parentPath;
+                    if (parentPath && (parentPath.isCallExpression() || parentPath.isConditionalExpression() || parentPath.isIfStatement())) {
+                        replacePathIfDefined(path, node.name, state);
+                    }
+                }
+            },
+
+            Statement(path, state) {
+                const node = path.node;
+                const trailingComments = node.trailingComments;
+                if (trailingComments) {
+                    trailingComments.some(comment => {
+                        const match = comment.value.match(/^\s*#if (.+)\s*$/);
+                        if (!match) return;
+                        const name = match[1];
+
+                        const defines = state.opts;
+                        if (defines[name] !== undefined) {
+                            comment.value = `defines: ${comment.value.trim()} = ${JSON.stringify(defines[name])}`;
+                            if (!defines[name]) {
+                                path.replaceWith(
+                                    t.emptyStatement()
+                                );
+                            }
+                        }
+
+                        return true;
+                    });
+                }
+            },
+        }
+    };
 }

@@ -1,34 +1,62 @@
-var fs = require('fs');
-var babel = require('babel-core');
-var diff = require('diff');
-var chalk = require('chalk');
+const fs = require('fs');
+const babel = require('babel-core');
+const diff = require('diff');
+const chalk = require('chalk');
 
-var pluginPath = require.resolve('..');
-
-var output = babel.transformFileSync(__dirname + '/fixtures/actual.js', {
-	babelrc: false,
-	presets: [],
-	plugins: [
-		[pluginPath, { "GLOBAL_TEST": 'test', "GLOBAL_1": 1, 'GLOBAL_FALSE': false }],
-	],
-});
-console.log(output.code);
-
-var expected = fs.readFileSync(__dirname + '/fixtures/expected.js', 'utf-8');
+const pluginPath = require.resolve('..');
 
 function normalizeLines(str) {
 	return str.trim();
 }
 
-diff.diffLines(normalizeLines(output.code), normalizeLines(expected))
-.forEach(function (part) {
-	var value = part.value;
-	if (part.added) {
-		value = chalk.green(part.value);
-	} else if (part.removed) {
-		value = chalk.red(part.value);
+function toErrorStack(err) {
+	if (err._babel && err instanceof SyntaxError) {
+		return `${err.name}: ${err.message}\n${err.codeFrame}`;
+	} else {
+		return err.stack;
 	}
-	process.stdout.write(value);
+}
+
+const tests = process.argv[2] ? [process.argv[2]]
+	: fs.readdirSync(__dirname + '/tests').filter(name => name.endsWith('.js'));
+
+tests.forEach(filename => {
+	const test = require(__dirname + '/tests/' + filename);
+
+	try {
+		const output = babel.transform(test.actual, {
+			babelrc: false,
+			presets: [],
+			plugins: [
+				[pluginPath, { "GLOBAL_TEST": 'test', "GLOBAL_1": 1, 'GLOBAL_FALSE': false }],
+			],
+		});
+
+		const actual = output.code.trim();
+		const expected = test.expected.trim();
+
+		if (actual !== expected) {
+			console.log(`Failed test: ${test.name || filename}`);
+
+			diff.diffLines(actual, expected).forEach(part => {
+				let value = part.value;
+				if (part.added) {
+					value = chalk.green(part.value);
+				} else if (part.removed) {
+					value = chalk.red(part.value);
+				}
+				process.stdout.write(value);
+			});
+
+			console.log('');
+			process.exit(1);
+		}
+	} catch (err) {
+		console.log(`Unexpected error in test: ${test.name || filename}`);
+
+		console.log(toErrorStack(err));
+		process.exit(1);
+	}
 });
 
-console.log();
+console.log(`${tests.length} tests`);

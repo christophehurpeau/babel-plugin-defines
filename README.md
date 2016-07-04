@@ -36,3 +36,20 @@ if (global.SERVER) {
     console.log('server');
 }
 ```
+
+## Other examples
+
+```js
+if (BROWSER) {
+    console.log('browser');
+}
+
+if (SERVER) {
+    console.log('server');
+}
+```
+
+```js
+import smthg from 'browser'; // #if BROWSER
+import smthg from 'server'; // #if SERVER
+```
