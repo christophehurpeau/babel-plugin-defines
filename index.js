@@ -28,9 +28,6 @@ exports.default = function (_ref) {
         visitor: {
             MemberExpression: function MemberExpression(path, state) {
                 var node = path.node;
-                // console.log(node);
-
-                // console.log('Identifier', node, path.scope.hasBinding(node.name));
 
                 if (t.isIdentifier(node.object) && node.object.name === 'global') {
                     var property = node.property;
@@ -44,7 +41,7 @@ exports.default = function (_ref) {
                     if (path.scope.hasBinding(node.name)) return;
 
                     var parentPath = path.parentPath;
-                    if (parentPath && (parentPath.isCallExpression() || parentPath.isConditionalExpression() || parentPath.isIfStatement())) {
+                    if (parentPath && (parentPath.isCallExpression() || parentPath.isConditionalExpression() || parentPath.isLogicalExpression() || parentPath.isIfStatement())) {
                         replacePathIfDefined(path, node.name, state);
                     }
                 }
