@@ -1,7 +1,7 @@
+/* global test */
 const fs = require('fs');
 const babel = require('babel-core');
-const diff = require('diff');
-const chalk = require('chalk');
+const { strictEqual } = require('assert');
 
 const pluginPath = require.resolve('..');
 
@@ -17,46 +17,38 @@ function toErrorStack(err) {
 	}
 }
 
-const tests = process.argv[2] ? [process.argv[2]]
+const last = process.argv[process.argv.length - 1];
+const tests = last !== 'test/index.js' ? [last]
 	: fs.readdirSync(__dirname + '/tests').filter(name => name.endsWith('.js'));
 
 tests.forEach(filename => {
-	const test = require(__dirname + '/tests/' + filename);
+	const testContent = require(__dirname + '/tests/' + filename);
 
-	try {
-		const output = babel.transform(test.actual, {
-			babelrc: false,
-			presets: [],
-			plugins: [
-				[pluginPath, { "GLOBAL_TEST": 'test', "GLOBAL_1": 1, 'GLOBAL_FALSE': false }],
-			],
-		});
-
-		const actual = output.code.trim();
-		const expected = test.expected.trim();
-
-		if (actual !== expected) {
-			console.log(`Failed test: ${test.name || filename}`);
-
-			diff.diffLines(actual, expected).forEach(part => {
-				let value = part.value;
-				if (part.added) {
-					value = chalk.green(part.value);
-				} else if (part.removed) {
-					value = chalk.red(part.value);
-				}
-				process.stdout.write(value);
+	test(testContent.name || filename, () => {
+		try {
+			const output = babel.transform(testContent.actual, {
+				babelrc: false,
+				presets: [],
+				plugins: [
+					[pluginPath, { "GLOBAL_TEST": 'test', "GLOBAL_1": 1, 'GLOBAL_FALSE': false }],
+				],
 			});
 
-			console.log('');
-			process.exit(1);
-		}
-	} catch (err) {
-		console.log(`Unexpected error in test: ${test.name || filename}`);
+			const actual = output.code.trim();
+			const expected = testContent.expected.trim();
 
-		console.log(toErrorStack(err));
-		process.exit(1);
-	}
+			strictEqual(actual, expected);
+		} catch (err) {
+			if (err._babel && err instanceof SyntaxError) {
+				console.log(`Unexpected error in test: ${test.name || filename}`);
+				console.log(`${err.name}: ${err.message}\n${err.codeFrame}`);
+				process.exit(1);
+			} else {
+				throw err;
+			}
+
+		}
+	});
 });
 
 console.log(`${tests.length} tests`);

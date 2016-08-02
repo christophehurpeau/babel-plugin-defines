@@ -9,7 +9,8 @@
   "author": "Christophe Hurpeau <christophe@hurpeau.com> (http://christophe.hurpeau.com/)",
   "scripts": {
     "watch": "babel --presets es2015,stage-0 -w index.src.js --out-file index.js",
-    "test": "node test/"
+    "test": "mocha -b -c -u tdd --es_staging test/index.js",
+    "test:watch": "mocha -w -b -c -u tdd --es_staging test/index.js"
   },
   "dependencies": {
     "babel-core": "^6.9.0"
@@ -18,7 +19,6 @@
     "babel-cli": "^6.9.0",
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-stage-0": "^6.5.0",
-    "chalk": "^1.1.3",
-    "diff": "^2.2.2"
+    "mocha": "^3.0.0"
   }
 }
