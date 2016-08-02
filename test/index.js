@@ -5,18 +5,6 @@ const { strictEqual } = require('assert');
 
 const pluginPath = require.resolve('..');
 
-function normalizeLines(str) {
-	return str.trim();
-}
-
-function toErrorStack(err) {
-	if (err._babel && err instanceof SyntaxError) {
-		return `${err.name}: ${err.message}\n${err.codeFrame}`;
-	} else {
-		return err.stack;
-	}
-}
-
 const last = process.argv[process.argv.length - 1];
 const tests = last !== 'test/index.js' ? [last]
 	: fs.readdirSync(__dirname + '/tests').filter(name => name.endsWith('.js'));
@@ -50,5 +38,3 @@ tests.forEach(filename => {
 		}
 	});
 });
-
-console.log(`${tests.length} tests`);
