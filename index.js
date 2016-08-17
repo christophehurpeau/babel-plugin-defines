@@ -38,10 +38,11 @@ exports.default = function (_ref) {
                 var node = path.node;
 
                 if (t.isIdentifier(node)) {
+                    console.log(node);
                     if (path.scope.hasBinding(node.name)) return;
 
                     var parentPath = path.parentPath;
-                    if (parentPath && (parentPath.isCallExpression() || parentPath.isConditionalExpression() || parentPath.isLogicalExpression() || parentPath.isIfStatement())) {
+                    if (parentPath && (parentPath.isCallExpression() || parentPath.isConditionalExpression() || parentPath.isLogicalExpression() || parentPath.isIfStatement() || parentPath.isUnaryExpression())) {
                         replacePathIfDefined(path, node.name, state);
                     }
                 }

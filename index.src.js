@@ -37,10 +37,13 @@ export default function ({ types: t }) {
                 const node = path.node;
 
                 if (t.isIdentifier(node)) {
+                    console.log(node);
                     if (path.scope.hasBinding(node.name)) return;
 
                     const parentPath = path.parentPath;
-                    if (parentPath && (parentPath.isCallExpression() || parentPath.isConditionalExpression() || parentPath.isLogicalExpression() || parentPath.isIfStatement())) {
+                    if (parentPath && (parentPath.isCallExpression() || parentPath.isConditionalExpression()
+                               || parentPath.isLogicalExpression() || parentPath.isIfStatement()
+                               || parentPath.isUnaryExpression())) {
                         replacePathIfDefined(path, node.name, state);
                     }
                 }
