@@ -38,7 +38,6 @@ exports.default = function (_ref) {
                 var node = path.node;
 
                 if (t.isIdentifier(node)) {
-                    console.log(node);
                     if (path.scope.hasBinding(node.name)) return;
 
                     var parentPath = path.parentPath;

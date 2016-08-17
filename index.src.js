@@ -37,7 +37,6 @@ export default function ({ types: t }) {
                 const node = path.node;
 
                 if (t.isIdentifier(node)) {
-                    console.log(node);
                     if (path.scope.hasBinding(node.name)) return;
 
                     const parentPath = path.parentPath;
