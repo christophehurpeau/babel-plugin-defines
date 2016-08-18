@@ -53,14 +53,16 @@ export default function ({ types: t }) {
                 const trailingComments = node.trailingComments;
                 if (trailingComments) {
                     trailingComments.some(comment => {
-                        const match = comment.value.match(/^\s*#if (.+)\s*$/);
+                        const match = comment.value.match(/^\s*#if\s+(!)?\s*(.+)\s*$/);
                         if (!match) return;
-                        const name = match[1];
+                        const not = match[1] === '!';
+                        const name = match[2];
 
                         const defines = state.opts;
                         if (defines[name] !== undefined) {
-                            comment.value = `defines: ${comment.value.trim()} = ${JSON.stringify(defines[name])}`;
-                            if (!defines[name]) {
+                            comment.value = `defines: ${comment.value.trim()} `
+                                +`= ${not ? '!' : ''}${JSON.stringify(defines[name])}`;
+                            if ((not && defines[name]) || (!not && !defines[name])) {
                                 path.replaceWith(
                                     t.emptyStatement()
                                 );
